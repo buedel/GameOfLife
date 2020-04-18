@@ -26,7 +26,7 @@ public class Board {
 		this.board = newBoard;
 	}
 
-	public void initBoard(int density) {
+	public void initBoard(double density) {
 		Random random = new Random();
 		for (int x = 0; x < board.length; x++) {
 			for (int y = 0; y < board.length; y++) {
@@ -82,5 +82,6 @@ public class Board {
 				newBoard[x][y] = getNewCell(x, y);
 			}
 		}
+		this.initBoard(newBoard);
 	}
 }
