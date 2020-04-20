@@ -31,6 +31,8 @@ public class Board {
 		for (int x = 0; x < board.length; x++) {
 			for (int y = 0; y < board.length; y++) {
 				if (random.nextDouble() > density) {
+					this.board[x][y] = 0;
+				} else {
 					this.board[x][y] = 1;
 				}
 			}
@@ -39,7 +41,7 @@ public class Board {
 
 	// Return the number of neighbors for a given cell
 	private int numNeighbors(int x, int y) {
-		
+
 		// how to get to the eight neighbors
 		int[] indexX = { -1, 0, 1, -1, 1, -1, 0, 1 };
 		int[] indexY = { 1, 1, 1, 0, 0, 0, -1, -1, -1 };
