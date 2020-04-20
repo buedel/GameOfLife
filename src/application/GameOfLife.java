@@ -2,7 +2,6 @@ package application;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Vector;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -12,6 +11,9 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -40,20 +42,17 @@ public class GameOfLife extends Application {
 	private Pane gameBoard = new Pane();
 	private Stage window;
 
-
-	// TODO:  Possible features to add:
+	// TODO: Possible features to add:
 	// - Auto pause when you start clicking on the cells.
 	// - Auto save the cell changes (shouldn't have to click restart)
 	// - Save the starting board do you can restart
 	// - Add a speed property / slider
 	// - Add a generation count
 	// - Add width/height properties
-	// - Store each generation and allow rewind 
-	// - Improve the way to draw on the grid
+	// - Store each generation and allow rewind
 	// - save / load a board
 	// - change the options to observable properties
-	
-	
+
 	public static void main(String[] args) {
 		launch(args);
 	}
@@ -233,7 +232,24 @@ public class GameOfLife extends Application {
 				cell.getStyleClass().add("dead-cell");
 				gameBoard.getChildren().add(cell);
 
-				cell.setOnMouseClicked(e -> toggleCell(cell));
+				// cell.setOnMouseClicked(e -> toggleCell(cell));
+				cell.setOnMousePressed(e -> toggleCell(cell));
+
+				cell.setOnDragDetected(e -> {
+					System.out.println("onDragDetected " + e.toString());
+					Dragboard db = cell.startDragAndDrop(TransferMode.ANY);
+					ClipboardContent content = new ClipboardContent();
+					content.putString(cell.getStyleClass().get(0));
+					db.setContent(content);
+					e.consume();
+				});
+
+				cell.setOnDragOver(e -> {
+					e.acceptTransferModes(TransferMode.ANY);
+					String style = e.getDragboard().getString();
+					cell.getStyleClass().clear();
+					cell.getStyleClass().add(style);
+				});
 
 				// Store the cell in a HashMap for fast access
 				// in the iterateBoard method.
