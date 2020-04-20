@@ -5,11 +5,15 @@ import java.util.Random;
 public class Board {
 
 	private int[][] board;
+	private int sizeX;
+	private int sizeY;
 
-	public Board(int size) {
-		board = new int[size][size];
+	public Board(int sizeX, int sizeY) {
+		board = new int[sizeX][sizeY];
+		this.sizeX = sizeX;
+		this.sizeY = sizeY;
 	}
-
+	
 	public void setField(int x, int y, int value) {
 		board[x][y] = value;
 	}
@@ -18,8 +22,12 @@ public class Board {
 		return board[x][y];
 	}
 
-	public int getSize() {
-		return board.length;
+	public int getSizeX() {
+		return this.sizeX;
+	}
+
+	public int getSizeY() {
+		return this.sizeY;
 	}
 
 	public void initBoard(int[][] newBoard) {
@@ -28,8 +36,8 @@ public class Board {
 
 	public void initBoard(double density) {
 		Random random = new Random();
-		for (int x = 0; x < board.length; x++) {
-			for (int y = 0; y < board.length; y++) {
+		for (int x = 0; x < this.sizeX; x++) {
+			for (int y = 0; y < this.sizeY; y++) {
 				if (random.nextDouble() > density) {
 					this.board[x][y] = 0;
 				} else {
@@ -49,8 +57,8 @@ public class Board {
 		// count the neighbors
 		int neighbors = 0; // Count the neighbors
 		for (int i = 0; i < 8; i++) {
-			if (x + indexX[i] >= 0 && y + indexY[i] >= 0 && x + indexX[i] < board.length
-					&& y + indexY[i] < board.length) {
+			if (x + indexX[i] >= 0 && y + indexY[i] >= 0 && x + indexX[i] < this.sizeX
+					&& y + indexY[i] < this.sizeY) {
 				neighbors += getField(x + indexX[i], y + indexY[i]);
 			}
 		}
@@ -78,9 +86,9 @@ public class Board {
 	}
 
 	public void nextPopulation() {
-		int[][] newBoard = new int[board.length][board.length];
-		for (int x = 0; x < board.length; x++) {
-			for (int y = 0; y < board.length; y++) {
+		int[][] newBoard = new int[this.sizeX][this.sizeY];
+		for (int x = 0; x < this.sizeX; x++) {
+			for (int y = 0; y < this.sizeY; y++) {
 				newBoard[x][y] = getNewCell(x, y);
 			}
 		}

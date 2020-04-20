@@ -2,6 +2,7 @@ package application;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Vector;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -25,17 +26,34 @@ public class GameOfLife extends Application {
 	private static final int MIN_HEIGHT = 10;
 	private static final int MAX_WIDTH = 100;
 	private static final int MAX_HEIGHT = 100;
-	private static final int WIDTH = 10;
-	private static final int HEIGHT = WIDTH; // TODO: I think these can only be equal with current implementation
-	private static final int BOARD_SIZE = 320;
+
+	// Properties // TODO Could make observable properties
+	private int sizeX = 40;
+	private int sizeY = 30;
+	private double density = 0.5;
+	private int width = 10;
+	private int height = 10;
 
 	private Map<String, StackPane> boardMap = new HashMap<String, StackPane>();
-	private Board board = new Board(BOARD_SIZE / WIDTH);
+	private Board board = new Board(sizeX, sizeY);
 	private BorderPane borderPane;
+	private Pane gameBoard = new Pane();
+	private Stage window;
 
-	// Properties
-	private double density = 0.5;
 
+	// TODO:  Possible features to add:
+	// - Auto pause when you start clicking on the cells.
+	// - Auto save the cell changes (shouldn't have to click restart)
+	// - Save the starting board do you can restart
+	// - Add a speed property / slider
+	// - Add a generation count
+	// - Add width/height properties
+	// - Store each generation and allow rewind 
+	// - Improve the way to draw on the grid
+	// - save / load a board
+	// - change the options to observable properties
+	
+	
 	public static void main(String[] args) {
 		launch(args);
 	}
@@ -43,6 +61,7 @@ public class GameOfLife extends Application {
 	@Override
 	public void start(Stage primaryStage) {
 
+		window = primaryStage;
 		final Timeline timeline = new Timeline();
 		KeyFrame updateFrame = new KeyFrame(Duration.ZERO, (e -> iterateBoard()));
 		KeyFrame delayFrame = new KeyFrame(Duration.millis(200));
@@ -51,7 +70,7 @@ public class GameOfLife extends Application {
 
 		borderPane = new BorderPane(); // Main pain
 
-		Node gameBoard = initializeGameBoard(); // UI
+		initializeGameBoard(); // UI
 
 		board.initBoard(this.density);
 		refreshGameBoard();
@@ -60,7 +79,9 @@ public class GameOfLife extends Application {
 		HBox buttonBar = new HBox();
 		Button playPauseButton = new Button("Play");
 		Button restartButton = new Button("Restart");
-		buttonBar.getChildren().addAll(playPauseButton, restartButton);
+		Button stepButton = new Button("Step");
+
+		buttonBar.getChildren().addAll(playPauseButton, restartButton, stepButton);
 
 		borderPane.setCenter(gameBoard);
 		borderPane.setBottom(buttonBar);
@@ -75,6 +96,8 @@ public class GameOfLife extends Application {
 				playPauseButton.setText("Pause");
 			}
 		});
+
+		stepButton.setOnAction(e -> iterateBoard());
 
 		board.initBoard(this.density); // Random Board
 		restartButton.setOnAction(e -> setupBoard());
@@ -92,16 +115,22 @@ public class GameOfLife extends Application {
 
 		// Size
 		HBox sizeHbox = new HBox();
-		Label sizeLabel = new Label("Size");
+		Button setSize = new Button("setSize");
+		setSize.setDisable(true);
 		TextField widthField = new TextField();
 		TextField heightField = new TextField();
 		widthField.setPromptText("width[" + MIN_WIDTH + "-" + MAX_WIDTH + "]");
 		heightField.setPromptText("height[" + MIN_HEIGHT + "-" + MAX_HEIGHT + "]");
-		sizeHbox.getChildren().addAll(sizeLabel, heightField, widthField);
+		sizeHbox.getChildren().addAll(setSize, heightField, widthField);
 		widthField.setMaxWidth(100);
 		heightField.setMaxWidth(100);
 
 		properties.getChildren().add(sizeHbox);
+		setSize.setOnAction(e -> {
+			this.sizeX = Integer.parseInt(widthField.getText());
+			this.sizeY = Integer.parseInt(heightField.getText());
+			this.resize(this.sizeX, this.sizeY);
+		});
 
 		// Density
 		HBox densityHbox = new HBox();
@@ -131,6 +160,23 @@ public class GameOfLife extends Application {
 				(v, oldVal, newVal) -> validateIntField(widthField, oldVal, newVal, MIN_HEIGHT, MAX_HEIGHT));
 		densityField.focusedProperty()
 				.addListener((v, oldVal, newVal) -> validateIntField(densityField, oldVal, newVal, 0, 100));
+
+		heightField.textProperty().addListener((v, o, n) -> {
+			System.out.println(v.toString());
+			if (heightField.getText().length() > 0 && widthField.getText().length() > 0) {
+				setSize.setDisable(false);
+			} else {
+				setSize.setDisable(true);
+			}
+		});
+
+		widthField.textProperty().addListener((v, o, n) -> {
+			if (heightField.getText().length() > 0 && widthField.getText().length() > 0) {
+				setSize.setDisable(false);
+			} else {
+				setSize.setDisable(true);
+			}
+		});
 
 		densityHbox.getChildren().addAll(densityLabel, densityField);
 		properties.getChildren().add(densityHbox);
@@ -164,18 +210,26 @@ public class GameOfLife extends Application {
 		}
 	}
 
+	private void resize(int sizeX, int sizeY) {
+		this.board = new Board(sizeX, sizeY);
+		board.initBoard(this.density);
+		initializeGameBoard();
+		borderPane.autosize();
+		window.sizeToScene();
+	}
+
 	// Initialize the graphical game board
-	private Node initializeGameBoard() {
-		Pane gameBoard = new Pane();
-		gameBoard.setMinSize(BOARD_SIZE, BOARD_SIZE);
+	private void initializeGameBoard() {
+		gameBoard.setMinSize(sizeX * width, sizeY * height);
 		// Create board with all dead cells
-		for (int x = 0; x < BOARD_SIZE; x += WIDTH) {
-			for (int y = 0; y < BOARD_SIZE; y += WIDTH) {
+		gameBoard.getChildren().clear();
+		for (int x = 0; x < sizeX; x++) {
+			for (int y = 0; y < sizeY; y++) {
 				StackPane cell = new StackPane();
-				cell.setLayoutX(x);
-				cell.setLayoutY(y);
-				cell.setPrefHeight(HEIGHT);
-				cell.setPrefWidth(WIDTH);
+				cell.setLayoutX(x * width);
+				cell.setPrefWidth(width);
+				cell.setLayoutY(y * height);
+				cell.setPrefHeight(height);
 				cell.getStyleClass().add("dead-cell");
 				gameBoard.getChildren().add(cell);
 
@@ -186,14 +240,13 @@ public class GameOfLife extends Application {
 				boardMap.put(x + "," + y, cell);
 			}
 		}
-		return gameBoard;
 	}
 
 	// setup the life board model using the populated board map GUI
 	private void setupBoard() {
-		for (int x = 0; x < board.getSize(); x++) {
-			for (int y = 0; y < board.getSize(); y++) {
-				StackPane cell = boardMap.get(x * WIDTH + "," + y * HEIGHT);
+		for (int x = 0; x < board.getSizeX(); x++) {
+			for (int y = 0; y < board.getSizeY(); y++) {
+				StackPane cell = boardMap.get(x + "," + y);
 				if (cell.getStyleClass().contains("alive-cell")) {
 					board.setField(x, y, 1);
 				} else {
@@ -202,11 +255,12 @@ public class GameOfLife extends Application {
 			}
 		}
 	}
+
 	// setup the game board gui based on the current life board model
 	private void refreshGameBoard() {
-		for (int x = 0; x < board.getSize(); x++) {
-			for (int y = 0; y < board.getSize(); y++) {
-				StackPane pane = boardMap.get(x * WIDTH + "," + y * HEIGHT);
+		for (int x = 0; x < board.getSizeX(); x++) {
+			for (int y = 0; y < board.getSizeY(); y++) {
+				StackPane pane = boardMap.get(x + "," + y);
 				pane.getStyleClass().clear();
 				// If the cell at (x,y) is a alive use css styling 'alive-cell'
 				// otherwise use the styling 'dead-cell'.
