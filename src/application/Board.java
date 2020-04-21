@@ -13,7 +13,7 @@ public class Board {
 		this.sizeX = sizeX;
 		this.sizeY = sizeY;
 	}
-	
+
 	public void setField(int x, int y, int value) {
 		board[x][y] = value;
 	}
@@ -52,13 +52,12 @@ public class Board {
 
 		// how to get to the eight neighbors
 		int[] indexX = { -1, 0, 1, -1, 1, -1, 0, 1 };
-		int[] indexY = { 1, 1, 1, 0, 0, 0, -1, -1, -1 };
+		int[] indexY = { 1, 1, 1, 0, 0, -1, -1, -1 };
 
 		// count the neighbors
 		int neighbors = 0; // Count the neighbors
 		for (int i = 0; i < 8; i++) {
-			if (x + indexX[i] >= 0 && y + indexY[i] >= 0 && x + indexX[i] < this.sizeX
-					&& y + indexY[i] < this.sizeY) {
+			if (x + indexX[i] >= 0 && y + indexY[i] >= 0 && x + indexX[i] < this.sizeX && y + indexY[i] < this.sizeY) {
 				neighbors += getField(x + indexX[i], y + indexY[i]);
 			}
 		}

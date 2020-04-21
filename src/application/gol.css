@@ -6,13 +6,13 @@
 }
  
 .alive-cell {
-    -fx-background-color: red;
+    -fx-background-color: blue;
     -fx-border-color: black;
     -fx-border-width: 0.1;
 }
  
 .dead-cell {
-    -fx-background-color: wheat;
+    -fx-background-color: aqua;
     -fx-border-color: black;
     -fx-border-width: 0.2;
 }
