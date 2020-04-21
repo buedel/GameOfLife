@@ -1,15 +1,21 @@
 package application;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
+import javafx.beans.binding.Bindings;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.Slider;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.TextField;
@@ -21,6 +27,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -78,6 +85,27 @@ public class GameOfLife extends Application {
 
 		buttonBar.getChildren().addAll(playPauseButton, stepButton);
 
+		MenuBar menuBar = new MenuBar();
+		Menu fileMenu = new Menu("File");
+		MenuItem newMi = new MenuItem("New");
+		MenuItem saveMi = new MenuItem("Save");
+		MenuItem loadMi = new MenuItem("Load");
+
+		FileChooser fileChooser = new FileChooser();
+
+		loadMi.setOnAction(e -> load(fileChooser.showOpenDialog(window)));
+		saveMi.setOnAction(e -> save(fileChooser.showSaveDialog(window)));
+
+		fileMenu.getItems().addAll(newMi, saveMi, loadMi);
+
+		Menu helpMenu = new Menu("Help");
+		MenuItem wikiMi = new MenuItem("Wiki");
+		MenuItem aboutMi = new MenuItem("About");
+		helpMenu.getItems().addAll(wikiMi, aboutMi);
+
+		menuBar.getMenus().addAll(fileMenu, helpMenu);
+
+		borderPane.setTop(menuBar);
 		borderPane.setCenter(gameBoard);
 		borderPane.setBottom(buttonBar);
 		borderPane.setLeft(properties);
@@ -139,9 +167,11 @@ public class GameOfLife extends Application {
 		// Speed
 		HBox speedHbox = new HBox();
 		Label speedLabel = new Label("Speed");
-		Slider speedSlider = new Slider(50, 1000, 300);
-		speedSlider.setMajorTickUnit(100);
-		speedSlider.setMinorTickCount(10);
+		Slider speedSlider = new Slider(1, 1000, 300);
+		Label speed = new Label();
+		speed.textProperty().bind(Bindings.format("%.2f", speedSlider.valueProperty()));
+		speedSlider.setMajorTickUnit(10);
+		speedSlider.setMinorTickCount(1);
 		speedSlider.setOnMousePressed(e -> timeline.stop());
 		speedSlider.setOnMouseReleased(e -> {
 			setTimer(speedSlider.getValue());
@@ -150,10 +180,13 @@ public class GameOfLife extends Application {
 				timeline.play();
 			}
 		});
-
-		speedHbox.getChildren().addAll(speedLabel, speedSlider);
+		speedHbox.getChildren().addAll(speedLabel, speedSlider, speed);
 		properties.getChildren().add(speedHbox);
 
+		// Wrap
+		CheckBox wrapCb = new CheckBox("Wrap?");
+		properties.getChildren().add(wrapCb);
+		wrapCb.setOnAction(e -> board.setWrap(wrapCb.isSelected()));
 		// Validate key input:
 		heightField.setOnKeyTyped(e -> {
 			if (!e.getCharacter().matches("[0-9]"))
@@ -220,6 +253,20 @@ public class GameOfLife extends Application {
 	private void play() {
 		timeline.play();
 		playPauseButton.setText("Pause");
+	}
+
+	private void load(File file) {
+		// TODO
+		if (file != null) {
+			System.out.println("Loading " + file.toString());
+		}
+	}
+
+	private void save(File file) {
+		// TODO
+		if (file != null) {
+			System.out.println("Saving " + file.toString());
+		}
 	}
 
 	private void resize(int sizeX, int sizeY) {

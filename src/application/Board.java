@@ -7,6 +7,7 @@ public class Board {
 	private int[][] board;
 	private int sizeX;
 	private int sizeY;
+	private boolean wrap;
 
 	public Board(int sizeX, int sizeY) {
 		board = new int[sizeX][sizeY];
@@ -28,6 +29,14 @@ public class Board {
 
 	public int getSizeY() {
 		return this.sizeY;
+	}
+
+	public boolean getWrap() {
+		return this.wrap;
+	}
+
+	public void setWrap(boolean wrap) {
+		this.wrap = wrap;
 	}
 
 	public void initBoard(int[][] newBoard) {
@@ -57,8 +66,26 @@ public class Board {
 		// count the neighbors
 		int neighbors = 0; // Count the neighbors
 		for (int i = 0; i < 8; i++) {
-			if (x + indexX[i] >= 0 && y + indexY[i] >= 0 && x + indexX[i] < this.sizeX && y + indexY[i] < this.sizeY) {
-				neighbors += getField(x + indexX[i], y + indexY[i]);
+			int nx = x + indexX[i];
+			int ny = y + indexY[i];
+
+			if (wrap) {
+				if (nx < 0) {
+					nx = this.sizeX-1;
+				}
+				if (ny < 0) {
+					ny = this.sizeY-1;
+				}
+				if (nx >= this.sizeX ) {
+					nx = 0;
+				}
+				if (ny >= this.sizeY) {
+					ny = 0;
+				}
+			}
+
+			if (nx >= 0 && ny >= 0 && nx < this.sizeX && ny < this.sizeY) {
+				neighbors += getField(nx, ny);
 			}
 		}
 		return neighbors;
