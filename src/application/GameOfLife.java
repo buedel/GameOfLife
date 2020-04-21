@@ -41,10 +41,10 @@ public class GameOfLife extends Application {
 	private BorderPane borderPane;
 	private Pane gameBoard = new Pane();
 	private Stage window;
+	private Timeline timeline = new Timeline();
+	private Button playPauseButton = new Button("Play");
 
 	// TODO: Possible features to add:
-	// - Auto pause when you start clicking on the cells.
-	// - Auto save the cell changes (shouldn't have to click restart)
 	// - Save the starting board do you can restart
 	// - Add a speed property / slider
 	// - Add a generation count
@@ -61,7 +61,6 @@ public class GameOfLife extends Application {
 	public void start(Stage primaryStage) {
 
 		window = primaryStage;
-		final Timeline timeline = new Timeline();
 		KeyFrame updateFrame = new KeyFrame(Duration.ZERO, (e -> iterateBoard()));
 		KeyFrame delayFrame = new KeyFrame(Duration.millis(200));
 		timeline.getKeyFrames().addAll(updateFrame, delayFrame);
@@ -76,11 +75,9 @@ public class GameOfLife extends Application {
 
 		Node properties = createPropertyLayout();
 		HBox buttonBar = new HBox();
-		Button playPauseButton = new Button("Play");
-		Button restartButton = new Button("Restart");
 		Button stepButton = new Button("Step");
 
-		buttonBar.getChildren().addAll(playPauseButton, restartButton, stepButton);
+		buttonBar.getChildren().addAll(playPauseButton, stepButton);
 
 		borderPane.setCenter(gameBoard);
 		borderPane.setBottom(buttonBar);
@@ -88,18 +85,15 @@ public class GameOfLife extends Application {
 
 		playPauseButton.setOnAction(e -> {
 			if (playPauseButton.getText().contentEquals("Pause")) {
-				timeline.stop();
-				playPauseButton.setText("Play");
+				pause();
 			} else {
-				timeline.play();
-				playPauseButton.setText("Pause");
+				play();
 			}
 		});
 
 		stepButton.setOnAction(e -> iterateBoard());
 
 		board.initBoard(this.density); // Random Board
-		restartButton.setOnAction(e -> setupBoard());
 
 		Scene scene = new Scene(borderPane);
 		scene.getStylesheets().add("application/gol.css");
@@ -161,7 +155,6 @@ public class GameOfLife extends Application {
 				.addListener((v, oldVal, newVal) -> validateIntField(densityField, oldVal, newVal, 0, 100));
 
 		heightField.textProperty().addListener((v, o, n) -> {
-			System.out.println(v.toString());
 			if (heightField.getText().length() > 0 && widthField.getText().length() > 0) {
 				setSize.setDisable(false);
 			} else {
@@ -187,7 +180,6 @@ public class GameOfLife extends Application {
 		// Apply button action
 		applyButton.setOnAction(e -> {
 			this.density = Integer.parseInt(densityField.getText()) / 100.0;
-			System.out.println("density = " + this.density);
 			this.board.initBoard(this.density);
 			refreshGameBoard();
 		});
@@ -207,6 +199,16 @@ public class GameOfLife extends Application {
 			}
 			field.setText("");
 		}
+	}
+
+	private void pause() {
+		timeline.stop();
+		playPauseButton.setText("Play");
+	}
+
+	private void play() {
+		timeline.play();
+		playPauseButton.setText("Pause");
 	}
 
 	private void resize(int sizeX, int sizeY) {
@@ -233,10 +235,16 @@ public class GameOfLife extends Application {
 				gameBoard.getChildren().add(cell);
 
 				// cell.setOnMouseClicked(e -> toggleCell(cell));
-				cell.setOnMousePressed(e -> toggleCell(cell));
+				cell.setOnMousePressed(e -> {
+					pause();
+					toggleCell(cell);	
+				});
+
+				// cell.setOnMouseReleased(e -> setupBoard());
+				cell.setOnMouseReleased(e -> setupBoard());
+				cell.setOnDragDropped(e -> setupBoard());
 
 				cell.setOnDragDetected(e -> {
-					System.out.println("onDragDetected " + e.toString());
 					Dragboard db = cell.startDragAndDrop(TransferMode.ANY);
 					ClipboardContent content = new ClipboardContent();
 					content.putString(cell.getStyleClass().get(0));
@@ -260,6 +268,7 @@ public class GameOfLife extends Application {
 
 	// setup the life board model using the populated board map GUI
 	private void setupBoard() {
+		System.out.println("Setup Board");
 		for (int x = 0; x < board.getSizeX(); x++) {
 			for (int y = 0; y < board.getSizeY(); y++) {
 				StackPane cell = boardMap.get(x + "," + y);
